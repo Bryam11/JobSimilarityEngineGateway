@@ -62,7 +62,7 @@ public class KeyService {
 
         // Si no está en caché, la solicitamos al servicio de autenticación
         return webClient.get()
-                .uri("http://localhost:8082/auth/public-key")
+                .uri("https://auth-pajw42smtq-ew.a.run.app/api/auth/public-key")
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(this::convertToPublicKey)
