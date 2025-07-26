@@ -30,7 +30,6 @@ server:
     min-spare-threads: 10
   compression:
     enabled: true
-  port: 9999
 
 # Logging Configuration
 logging:
