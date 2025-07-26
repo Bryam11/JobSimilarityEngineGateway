@@ -12,11 +12,7 @@ spring:
               predicates:
                 - Path=/api/auth/**
             - id: jobs-service
-              uri: http://localhost:8082
-              predicates:
-                - Path=/api/jobs/**
-            - id: model-service
-              uri: http://localhost:8083
+              uri: https://jobsimilarityenginebackend-621018213760.europe-west1.run.app
               predicates:
                 - Path=/api/model/**
 
@@ -34,6 +30,7 @@ server:
     min-spare-threads: 10
   compression:
     enabled: true
+  port: 9999
 
 # Logging Configuration
 logging:
