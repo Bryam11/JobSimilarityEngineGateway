@@ -9,7 +9,11 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHeadersWriter;
 import org.springframework.security.web.server.header.XFrameOptionsServerHttpHeadersWriter;
-import org.springframework.security.web.server.header.XXssProtectionServerHttpHeadersWriter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -31,11 +35,12 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 // Add security headers to protect against various attacks
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.mode(XFrameOptionsServerHttpHeadersWriter.Mode.DENY))
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'"))
-                        .xssProtection(xss -> xss.headerValue(XXssProtectionServerHttpHeadersWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                        .xssProtection(xss -> xss.disable()) // Usar disable() en lugar del valor que causaba el error
                         .cache(ServerHttpSecurity.HeaderSpec.CacheSpec::disable)
                         .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyServerHttpHeadersWriter.ReferrerPolicy.NO_REFERRER))
                 )
@@ -48,5 +53,24 @@ public class SecurityConfig {
                 .addFilterBefore(rateLimitingFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.reactive.CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOrigins(Arrays.asList("*")); // En producción, especificar dominios concretos
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        corsConfig.setMaxAge(3600L);
+        corsConfig.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+        return source;
+    }
+
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        return new CorsWebFilter(corsConfigurationSource());
     }
 }
